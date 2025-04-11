@@ -1,15 +1,11 @@
 import streamlit as st
-
-# ✅ This must come FIRST — before any other Streamlit commands
 st.set_page_config(page_title="📚 Hybrid Book Recommender", layout="wide")
 
-# ✅ THEN do your other imports
 import pandas as pd
 from surprise import Dataset, Reader, KNNBaseline
 from difflib import get_close_matches
 
 # rest of your code...
-
 
 # --- LOAD DATA ---
 @st.cache_data
