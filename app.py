@@ -5,6 +5,10 @@ import pandas as pd
 from joblib import load
 from difflib import get_close_matches
 
+import sys
+st.write(f"🧪 Python version: {sys.version}")
+
+
 # --- LOAD DATA ---
 @st.cache_data
 def load_data():
