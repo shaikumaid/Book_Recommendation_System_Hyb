@@ -2,6 +2,6 @@ streamlit>=1.26.0
 streamlit
 pandas
 openpyxl
-scikit-surprise
+scikit-surprise @ https://github.com/NicolasHug/Surprise/releases/download/v1.1.3/scikit_surprise-1.1.3-cp312-cp312-manylinux2014_x86_64.whl
 joblib
 Pillow
