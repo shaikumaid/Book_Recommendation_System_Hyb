@@ -2,10 +2,8 @@ import streamlit as st
 st.set_page_config(page_title="📚 Hybrid Book Recommender", layout="wide")
 
 import pandas as pd
-from surprise import Dataset, Reader, KNNBaseline
+from joblib import load
 from difflib import get_close_matches
-
-# rest of your code...
 
 # --- LOAD DATA ---
 @st.cache_data
@@ -16,7 +14,7 @@ def load_data():
     df = df[df['Book-Rating'] > 0]
     df.dropna(subset=['Book-Title', 'Book-Author', 'Image-URL-M'], inplace=True)
 
-     # ✅ Limit to top 10,000 most-rated books
+    # ✅ Limit to top 1000 most-rated books
     top_books = df['ISBN'].value_counts().head(1000).index
     df = df[df['ISBN'].isin(top_books)]
     
@@ -24,20 +22,10 @@ def load_data():
 
 Books_df, Ratings_df, filtered_df = load_data()
 
-# --- SURPRISE MODELS ---
-reader = Reader(rating_scale=(0, 10))
-data = Dataset.load_from_df(filtered_df[['User-ID', 'ISBN', 'Book-Rating']], reader)
-trainset = data.build_full_trainset()
-
-# User-Based
-sim_options_user = {'name': 'pearson_baseline', 'user_based': True}
-user_knn = KNNBaseline(sim_options=sim_options_user)
-user_knn.fit(trainset)
-
-# Item-Based
-sim_options_item = {'name': 'pearson_baseline', 'user_based': False}
-knn_model = KNNBaseline(sim_options=sim_options_item)
-knn_model.fit(trainset)
+# --- LOAD PRETRAINED MODELS ---
+user_knn = load("user_model.joblib")
+knn_model = load("item_model.joblib")
+trainset = load("trainset.joblib")
 
 # --- POPULAR BOOKS FALLBACK ---
 def get_popular_books(n=10):
@@ -62,9 +50,11 @@ def hybrid_recommendation(input_text):
         all_books = filtered_df['ISBN'].unique()
         predictions = []
         for isbn in all_books:
-            if trainset.knows_item(trainset.to_inner_iid(isbn)):
+            try:
                 pred = user_knn.predict(user_id, isbn)
                 predictions.append((isbn, pred.est))
+            except:
+                continue
 
         predictions = sorted(predictions, key=lambda x: x[1], reverse=True)[:10]
         for isbn, score in predictions:
@@ -82,17 +72,20 @@ def hybrid_recommendation(input_text):
     
     matched_title = matches[0]
     input_isbn = Books_df[Books_df['Book-Title'] == matched_title]['ISBN'].values[0]
-    inner_id = trainset.to_inner_iid(input_isbn)
-    neighbors = knn_model.get_neighbors(inner_id, k=10)
+    try:
+        inner_id = trainset.to_inner_iid(input_isbn)
+        neighbors = knn_model.get_neighbors(inner_id, k=10)
+        for inner in neighbors:
+            isbn = trainset.to_raw_iid(inner)
+            book = Books_df[Books_df['ISBN'] == isbn].drop_duplicates('Book-Title')
+            if not book.empty:
+                row = book.iloc[0]
+                pred = knn_model.predict(0, isbn).est  # Dummy user
+                avg_rating = filtered_df[filtered_df['ISBN'] == isbn]['Book-Rating'].mean()
+                results.append(format_result(row, pred, avg_rating))
+    except:
+        return get_fallback()
 
-    for inner in neighbors:
-        isbn = trainset.to_raw_iid(inner)
-        book = Books_df[Books_df['ISBN'] == isbn].drop_duplicates('Book-Title')
-        if not book.empty:
-            row = book.iloc[0]
-            pred = knn_model.predict(trainset.to_raw_uid(trainset.to_inner_uid('99999')), isbn).est  # Dummy user
-            avg_rating = filtered_df[filtered_df['ISBN'] == isbn]['Book-Rating'].mean()
-            results.append(format_result(row, pred, avg_rating))
     return results
 
 
