@@ -6,6 +6,4 @@ fuzzywuzzy
 python-Levenshtein
 streamlit
 matplotlib
-
-# Prebuilt wheel for Streamlit compatibility (Python 3.12)
 scikit-surprise @ https://github.com/NicolasHug/Surprise/releases/download/v1.1.3/scikit_surprise-1.1.3-cp312-cp312-manylinux2014_x86_64.whl
