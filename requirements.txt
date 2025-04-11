@@ -6,4 +6,4 @@ fuzzywuzzy
 python-Levenshtein
 streamlit
 matplotlib
-scikit-surprise @ https://github.com/shaikumaid/scikit-surprise-wheel/releases/download/v1.1.3-py312/scikit_surprise-1.1.3-cp312-cp312-manylinux2014_x86_64.whl
+scikit-surprise==1.1.3
