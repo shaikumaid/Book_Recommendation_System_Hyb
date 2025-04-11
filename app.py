@@ -21,7 +21,7 @@ def load_data():
     df.dropna(subset=['Book-Title', 'Book-Author', 'Image-URL-M'], inplace=True)
 
      # ✅ Limit to top 10,000 most-rated books
-    top_books = df['ISBN'].value_counts().head(10000).index
+    top_books = df['ISBN'].value_counts().head(1000).index
     df = df[df['ISBN'].isin(top_books)]
     
     return books, ratings, df
